@@ -33,9 +33,11 @@ export class UsersClient {
         return { response, duration };
     }
 
-    async editUser(userId: any, body: {}) {
+    async editUser(userId: any, userData: {}) {
         const start = Date.now();
-        const response = await this.request.put(`/users/${userId}`, body);
+        const response = await this.request.put(`/users/${userId}`, {
+            data: userData,
+        });
         const duration = Date.now() - start;
 
         return { response, duration };
