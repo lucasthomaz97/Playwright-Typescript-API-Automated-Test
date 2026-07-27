@@ -8,7 +8,7 @@ test.describe('GET users', () => {
 
     test.beforeAll( async ({request}) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser('Test User' ,usersClient.generateEmail());
+        const {response, duration} = await usersClient.createUser({ name: 'Test User', email: usersClient.generateEmail() });
         const user = await response.json();
         userId = user.id;
     });
@@ -55,7 +55,7 @@ test.describe('POST users', () => {
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
         }
-        const { response, duration } = await usersClient.createUser(userData.name, userData.email);
+        const { response, duration } = await usersClient.createUser(userData);
         const user = await response.json();
 
         expectCorrectResponse(response, 201, duration);
@@ -73,12 +73,12 @@ test.describe('POST users', () => {
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
         }
-        const { response, duration } = await usersClient.createUser(userData.name, userData.email);
+        const { response, duration } = await usersClient.createUser(userData);
         const user = await response.json();
 
         expect(response.status()).toBe(201);
 
-        const {response: secondResponse, duration: secondDuration} = await usersClient.createUser(userData.name, userData.email);
+        const {response: secondResponse, duration: secondDuration} = await usersClient.createUser(userData);
         const error = await secondResponse.json();
 
         expectCorrectResponse(secondResponse, 409, secondDuration);
@@ -101,7 +101,7 @@ test.describe('POST users', () => {
     testCases.forEach(({ scenario, data, statusCode, expectedBody}) => {
         test(scenario, async ({ request }) => {
             const usersClient: UsersClient = new UsersClient(request);
-            const {response, duration} = await usersClient.createUser(data.name, data.email);
+            const {response, duration} = await usersClient.createUser(data);
             const ret = await response.json()
 
             expectCorrectResponse(response, statusCode, duration);
@@ -117,7 +117,7 @@ test.describe('PUT users', () => {
 
     test.beforeEach( async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser('Test User to Edit', usersClient.generateEmail());
+        const {response, duration} = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
         const user = await response.json();
         userId = user.id;
         userName = user.name;
@@ -174,7 +174,7 @@ test.describe('PUT users', () => {
 
     test('should return 409 when editing an user email to one already in use by another user', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser('Test User Using Email', usersClient.generateEmail());
+        const {response, duration} = await usersClient.createUser({ name: 'Test User Using Email', email: usersClient.generateEmail() });
         const user = await response.json();
 
         const data = {name: 'Test Edited User', email: user.email};
@@ -187,7 +187,7 @@ test.describe('PUT users', () => {
 
     test('should not change user data when an error 409 occurs', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser('Test User to Edit', usersClient.generateEmail());
+        const {response, duration} = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
         const user = await response.json();
 
         const data = {name: 'Test Edited User', email: user.email};
@@ -234,7 +234,7 @@ test.describe('DELETE users', () => {
 
     test.beforeAll( async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser('Test User to Delete', usersClient.generateEmail());
+        const {response, duration} = await usersClient.createUser({ name: 'Test User to Delete', email: usersClient.generateEmail() });
         const user = await response.json();
         userId = user.id;
     });
@@ -261,7 +261,7 @@ test.describe('DELETE users', () => {
     test('should return a 404 when trying to delete an user for the second time', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
 
-        const {response: createRes, duration: createDuration} = await usersClient.createUser('Test User To Delete', usersClient.generateEmail());
+        const {response: createRes, duration: createDuration} = await usersClient.createUser({ name: 'Test User To Delete', email: usersClient.generateEmail() });
         const user = await createRes.json();
         const newUserId = user.id;
 

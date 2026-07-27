@@ -7,12 +7,12 @@ export class UsersClient {
         return `test_${Date.now()}@example.com`;
     }
 
-    async createUser(name: any, email: any) {
+    async createUser(userData: { name: any; email: any }) {
         const start = Date.now()
         const response = await this.request.post('/users', {
             data: {
-                'name': name,
-                'email': email
+                'name': userData.name,
+                'email': userData.email
             }
         });
         const duration = Date.now() - start;
