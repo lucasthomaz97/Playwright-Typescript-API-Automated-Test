@@ -40,7 +40,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   if (typeof price !== 'string' || isNaN(Number(price)) || Number(price) <= 0) {
-    res.status(400).json({ error: 'Price must be a numeric string' });
+    res.status(400).json({ error: 'Price must be a positive numeric string' });
     return;
   }
 
@@ -77,7 +77,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 
   if (price !== undefined && (typeof price !== 'string' || isNaN(Number(price)) || Number(price) <= 0)) {
-    res.status(400).json({ error: 'Price must be a numeric string' });
+    res.status(400).json({ error: 'Price must be a positive numeric string' });
     return;
   }
 
