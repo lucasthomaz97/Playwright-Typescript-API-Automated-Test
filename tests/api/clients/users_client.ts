@@ -4,10 +4,10 @@ export class UsersClient {
     constructor(private request: APIRequestContext) {}
 
     generateEmail() {
-        return `test_${Date.now()}@example.com`;
+        return `test_${Date.now()}_${Math.random().toString(36).substring(2, 7)}@example.com`;
     }
 
-    async createUser(userData: { name: any; email: any }) {
+    async createUser(userData: { name?: any; email?: any }) {
         const start = Date.now()
         const response = await this.request.post('/users', {
             data: {
