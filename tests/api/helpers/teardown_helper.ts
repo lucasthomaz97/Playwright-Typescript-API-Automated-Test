@@ -13,6 +13,7 @@ export default async function teardownHelper() {
     });
 
     try {
+        await pool.query("DELETE FROM orders USING users, products WHERE orders.user_id = users.id AND orders.product_id = products.id AND (users.name ILIKE '%test%' OR products.name ILIKE '%test%')");
         await pool.query("DELETE FROM products WHERE name ILIKE '%test%'");
         await pool.query("DELETE FROM users WHERE name ILIKE '%test%'");
     } finally {

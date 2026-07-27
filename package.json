@@ -15,7 +15,12 @@
     "test:get-user": "playwright test --grep \"GET users\"",
     "test:delete-user": "playwright test --grep \"DELETE users\"",
     "test:post-user": "playwright test --grep \"POST users\"",
-    "test:put-user": "playwright test --grep \"PUT users\""
+    "test:put-user": "playwright test --grep \"PUT users\"",
+    "test:get-orders": "playwright test --grep \"GET orders\"",
+    "test:get-order-by-id": "playwright test --grep \"GET order by ID\"",
+    "test:post-order": "playwright test --grep \"POST order\"",
+    "test:put-order": "playwright test --grep \"PUT order\"",
+    "test:delete-order": "playwright test --grep \"DELETE order\""
   },
   "author": "Lucas Thomaz",
   "license": "ISC",
