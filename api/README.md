@@ -39,7 +39,7 @@ psql -U postgres -c "CREATE DATABASE ecommerce;"
 npx tsx api/src/server.ts
 ```
 
-Tables (`products`, `users`) are created automatically on startup.
+Tables (`products`, `users`, `orders`) are created automatically on startup.
 
 ## API Endpoints
 
@@ -54,6 +54,11 @@ Tables (`products`, `users`) are created automatically on startup.
 | GET | `/users/:id` | Get user by ID |
 | PUT | `/users/:id` | Update user |
 | DELETE | `/users/:id` | Delete user |
+| GET | `/orders` | List all orders (includes user and product details) |
+| GET | `/orders/:id` | Get order by ID |
+| POST | `/orders` | Create order |
+| PUT | `/orders/:id` | Update order |
+| DELETE | `/orders/:id` | Delete order |
 
 ### Example requests
 
@@ -67,6 +72,11 @@ curl -X POST http://localhost:3000/products \
 curl -X POST http://localhost:3000/users \
   -H "Content-Type: application/json" \
   -d '{"name":"John","email":"john@example.com"}'
+
+# Create an order
+curl -X POST http://localhost:3000/orders \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":1,"product_id":1,"quantity":2,"total":"39.98"}'
 ```
 
 ---
@@ -106,7 +116,7 @@ psql -U postgres -c "CREATE DATABASE ecommerce;"
 npx tsx api/src/server.ts
 ```
 
-As tabelas (`products`, `users`) são criadas automaticamente na inicialização.
+As tabelas (`products`, `users`, `orders`) são criadas automaticamente na inicialização.
 
 ### Endpoints da API
 
@@ -121,6 +131,11 @@ As tabelas (`products`, `users`) são criadas automaticamente na inicialização
 | GET | `/users/:id` | Buscar usuário por ID |
 | PUT | `/users/:id` | Atualizar usuário |
 | DELETE | `/users/:id` | Excluir usuário |
+| GET | `/orders` | Listar todos os pedidos (inclui detalhes do usuário e produto) |
+| GET | `/orders/:id` | Buscar pedido por ID |
+| POST | `/orders` | Criar pedido |
+| PUT | `/orders/:id` | Atualizar pedido |
+| DELETE | `/orders/:id` | Excluir pedido |
 
 ### Exemplos de requisição
 
@@ -134,4 +149,9 @@ curl -X POST http://localhost:3000/products \
 curl -X POST http://localhost:3000/users \
   -H "Content-Type: application/json" \
   -d '{"name":"João","email":"joao@example.com"}'
+
+# Criar um pedido
+curl -X POST http://localhost:3000/orders \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":1,"product_id":1,"quantity":2,"total":"39.98"}'
 ```
