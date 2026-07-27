@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express, { NextFunction, Request, Response } from 'express';
 import productsRouter from './routes/products';
 import usersRouter from './routes/users';
+import ordersRouter from './routes/orders';
 import { initDb } from './db';
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.json());
 
 app.use('/products', productsRouter);
 app.use('/users', usersRouter);
+app.use('/orders', ordersRouter);
 
 app.get('/', (_req, res) => {
   res.json({ message: 'E-commerce API' });
