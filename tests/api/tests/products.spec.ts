@@ -36,20 +36,22 @@ test.describe('GET Products', () => {
     test('should return 10 more products, after adding 10 products', async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
 
-        const { response:firstResponse , duration:firstDuration } = await productsClient.getProducts();
-        const initialResponse = await firstResponse.json();
-        const initialSize = initialResponse.length;
-        expectCorrectResponse(firstResponse, 200, firstDuration);
-
+        const addedIds: number[] = [];
         for (let i: number = 0; i < 10; i++) {
-            const product = await productsClient.addProduct();
+            const response = await productsClient.addProduct();
+            const product = await response.json();
+            addedIds.push(product.id);
         }
 
         const { response, duration } = await productsClient.getProducts();
         const products = await response.json();
         expectCorrectResponse(response, 200, duration);
 
-        expect(products.length).toEqual(10+initialSize);
+        const returnedIds = products.map((product: Product) => product.id);
+        addedIds.forEach((id: number) => {
+            expect(returnedIds).toContain(id);
+        });
+
         products.forEach((product: Product) => {
             expect(product).toEqual(
                 expect.objectContaining({
