@@ -5,6 +5,6 @@ export function expectCorrectUserData(user: User) {
     expect(user.id).toBeGreaterThan(0);
     expect(user.name.trim()).not.toBe("");
     expect(user.email).toContain("@");
-    expect(user.email).toContain('.com');
+    expect(user.email).toMatch(/^.+@.+\..+$/);
     expect(Date.parse(user.created_at)).not.toBeNaN();
 }

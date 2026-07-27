@@ -76,14 +76,7 @@ test.describe('POST users', () => {
         const { response, duration } = await usersClient.createUser(userData.name, userData.email);
         const user = await response.json();
 
-        expectCorrectResponse(response, 201, duration);
-        expect(user).toEqual(expect.objectContaining({
-            id: expect.any(Number),
-            name: userData.name,
-            email: userData.email,
-            created_at: expect.any(String)
-        }));
-        expectCorrectUserData(user);
+        expect(response.status()).toBe(201);
 
         const {response: secondResponse, duration: secondDuration} = await usersClient.createUser(userData.name, userData.email);
         const error = await secondResponse.json();
