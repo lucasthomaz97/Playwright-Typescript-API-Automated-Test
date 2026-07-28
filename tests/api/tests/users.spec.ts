@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { UsersClient } from '../clients/users_client';
 import { expectCorrectUserData } from '../helpers/user_helper';
+import { NON_EXISTENT_ID } from '../helpers/constants';
 
 test.describe('GET users', () => {
     let userId: number;
@@ -31,7 +32,7 @@ test.describe('GET users', () => {
     });
 
     const testCases = [
-        {"scenario": "should return 404 for a non existent user id", "inputId": 999999999, "statusCode": 404, "expectedBody": {"error": "User not found"}},
+        {"scenario": "should return 404 for a non existent user id", "inputId": NON_EXISTENT_ID, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 400 for an invalid user id", "inputId": "invalid-id", "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 for a negative user id", "inputId": -1, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 for a decimal user id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}}
@@ -210,7 +211,7 @@ test.describe('PUT users', () => {
         {"scenario": "should return 400 when trying to edit an user with a decimal id", "inputId": 1.5, "data": {"name": "Edited User", "email": `put_test${Date.now()}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 when trying to edit an user with a negative id", "inputId": -1, "data": {"name": "Edited User", "email": `put_test${Date.now()}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 when trying to edit an user with id 0", "inputId": 0, "data": {"name": "Edited User", "email": `put_test${Date.now()}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 404 when user is not found with this id", "inputId": 999999999, "data": {"name": "Edited User", "email": `put_test${Date.now()}@example.com`}, "statusCode": 404, "expectedBody": {"error": "User not found"}},
+        {"scenario": "should return 404 when user is not found with this id", "inputId": NON_EXISTENT_ID, "data": {"name": "Edited User", "email": `put_test${Date.now()}@example.com`}, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 400 when name is a number", "inputId": null, "data": {"name": 2026, "email": `put_test${Date.now()}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name must be a string"}},
         {"scenario": "should return 400 when email is a number", "inputId": null, "data": {"name": "Edited User", "email": 2026}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}},
         {"scenario": "should return 400 when email is not valid", "inputId": null, "data": {"name": "Edited User", "email": 'pretend_to_be_email'}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}}
@@ -288,7 +289,7 @@ test.describe('DELETE users', () => {
 
     const testCases = [
         {"scenario": "should return 404 when deleting an user with id 0", "inputId": 0, "statusCode": 404, "expectedBody": {"error": "User not found"}},
-        {"scenario": "should return 404 when deleting a non existent user id", "inputId": 999999999, "statusCode": 404, "expectedBody": {"error": "User not found"}},
+        {"scenario": "should return 404 when deleting a non existent user id", "inputId": NON_EXISTENT_ID, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 400 when deleting an user with invalid id", "inputId": "invalid-id", "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 when deleting an user with a negative id", "inputId": -1, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 when deleting an user with a decimal id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}}

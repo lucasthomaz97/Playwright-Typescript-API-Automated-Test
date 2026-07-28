@@ -3,6 +3,7 @@ import { ProductsClient } from '../clients/products_client';
 import { Product } from '../models/Product';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { expectCorrectProductData } from '../helpers/product_helper';
+import { NON_EXISTENT_ID } from '../helpers/constants';
 
 test.describe('GET Products', () => {
     test.beforeAll(async ({ request }) => {
@@ -33,8 +34,13 @@ test.describe('GET Products', () => {
         });
     });
 
-    test('should return 10 more products, after adding 10 products', async ({ request }) => {
+    test('should return more products after adding 10', async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
+
+        const { response: initialResponse, duration: initialDuration } = await productsClient.getProducts();
+        const initialProducts = await initialResponse.json();
+        const initialSize = initialProducts.length;
+        expectCorrectResponse(initialResponse, 200, initialDuration);
 
         const addedIds: number[] = [];
         for (let i: number = 0; i < 10; i++) {
@@ -46,6 +52,8 @@ test.describe('GET Products', () => {
         const { response, duration } = await productsClient.getProducts();
         const products = await response.json();
         expectCorrectResponse(response, 200, duration);
+
+        expect(products.length).toBeGreaterThan(initialSize);
 
         const returnedIds = products.map((product: Product) => product.id);
         addedIds.forEach((id: number) => {
@@ -99,7 +107,7 @@ test.describe('GET Product by ID', () => {
 
     const testCases = [
         {"scenario": "should return 404 for a product with ID 0", "productId": 0, "errorCode": 404, "expectedError": { error: 'Product not found' }},
-        {"scenario": "should return 404 for a non-existent product ID", "productId": 999999999, "errorCode": 404, "expectedError": { error: 'Product not found' }},
+        {"scenario": "should return 404 for a non-existent product ID", "productId": NON_EXISTENT_ID, "errorCode": 404, "expectedError": { error: 'Product not found' }},
         {"scenario": "should return 400 for an invalid product ID", "productId": 'invalid-id', "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 for a negative product ID", "productId": -1, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 for a decimal ID", "productId": 1.5, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
@@ -223,7 +231,7 @@ test.describe('PUT Product', () => {
     });
 
     const testCases = [
-        {"scenario": "should return 404 when updating a non-existent product", "inputId": 999999999, "productData": {name: 'Test Updated Product', price: '39.99', description: 'This is an updated product'}, "errorCode": 404, "expectedError": { error: 'Product not found' }},
+        {"scenario": "should return 404 when updating a non-existent product", "inputId": NON_EXISTENT_ID, "productData": {name: 'Test Updated Product', price: '39.99', description: 'This is an updated product'}, "errorCode": 404, "expectedError": { error: 'Product not found' }},
         {"scenario": "should return 400 when updating a product with invalid ID", "inputId": "invalid-id", "productData": {name: 'Test Updated Product', price: '39.99', description: 'This is an updated product'}, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 when updating the product with ID 0", "inputId": 0, "productData": {name: 'Test Updated Product', price: '39.99', description: 'This is an updated product'}, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 when trying to update a product with a decimal ID", "inputId": 1.5, "productData": {name: 'Test Decimal Product', price: '3.14', description: 'This is a decimal product'}, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
@@ -313,7 +321,7 @@ test.describe('DELETE Product', () => {
 
     const testCases = [
         {"scenario": "should return 404 for a product with ID 0", "productId": 0, "errorCode": 404, "expectedError": { error: 'Product not found' }},
-        {"scenario": "should return 404 when deleting a non-existent product", "productId": 999999999, "errorCode": 404, "expectedError": { error: 'Product not found' }},
+        {"scenario": "should return 404 when deleting a non-existent product", "productId": NON_EXISTENT_ID, "errorCode": 404, "expectedError": { error: 'Product not found' }},
         {"scenario": "should return 400 when deleting a product with invalid ID", "productId": 'invalid-id', "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 when deleting a product with negative ID", "productId": -1, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 when deleting a product with decimal ID", "productId": 1.5, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},

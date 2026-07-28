@@ -5,6 +5,7 @@ import { UsersClient } from '../clients/users_client';
 import { Order } from '../models/Order';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { expectCorrectOrderData } from '../helpers/order_helper';
+import { NON_EXISTENT_ID } from '../helpers/constants';
 
 test.describe('GET orders', () => {
     test.beforeAll(async ({ request }) => {
@@ -73,18 +74,33 @@ test.describe('GET orders', () => {
         const productRes = await productsClient.addProduct();
         const product = await productRes.json();
 
-        await ordersClient.createOrder({
+        const orderData = {
             user_id: user.id,
             product_id: product.id,
             quantity: 3,
             total: '59.97',
-        });
+        };
+
+        const { response: createRes, duration: createDuration } = await ordersClient.createOrder(orderData);
+        expectCorrectResponse(createRes, 201, createDuration);
+        const createdOrder = await createRes.json();
 
         const { response, duration } = await ordersClient.getOrders();
         const orders = await response.json();
         expectCorrectResponse(response, 200, duration);
 
-        expect(orders.length).toEqual(1 + initialSize);
+        expect(orders.length).toBeGreaterThan(initialSize);
+        expect(orders).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: createdOrder.id,
+                    user_id: orderData.user_id,
+                    product_id: orderData.product_id,
+                    quantity: orderData.quantity,
+                    total: orderData.total,
+                }),
+            ])
+        );
         orders.forEach((order: Order) => {
             expect(order).toEqual(
                 expect.objectContaining({
@@ -155,7 +171,7 @@ test.describe('GET order by ID', () => {
 
     const testCases = [
         { scenario: 'should return 404 for an order with ID 0', orderId: 0, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 404 for a non-existent order ID', orderId: 999999999, errorCode: 404, expectedError: { error: 'Order not found' } },
+        { scenario: 'should return 404 for a non-existent order ID', orderId: NON_EXISTENT_ID, errorCode: 404, expectedError: { error: 'Order not found' } },
         { scenario: 'should return 400 for an invalid order ID', orderId: 'invalid-id', errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 for a negative order ID', orderId: -1, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 for a decimal order ID', orderId: 1.5, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
@@ -268,7 +284,7 @@ test.describe('POST order', () => {
         const product = await productRes.json();
 
         const { response, duration } = await ordersClient.createOrder({
-            user_id: 999999999,
+            user_id: NON_EXISTENT_ID,
             product_id: product.id,
             quantity: 2,
             total: '39.98',
@@ -288,7 +304,7 @@ test.describe('POST order', () => {
 
         const { response, duration } = await ordersClient.createOrder({
             user_id: user.id,
-            product_id: 999999999,
+            product_id: NON_EXISTENT_ID,
             quantity: 2,
             total: '39.98',
         });
@@ -418,7 +434,7 @@ test.describe('PUT order', () => {
 
     test('should return 400 when updating to a non-existent user', async ({ request }) => {
         const ordersClient = new OrdersClient(request);
-        const { response, duration } = await ordersClient.putOrder(orderId, { user_id: 999999999 });
+        const { response, duration } = await ordersClient.putOrder(orderId, { user_id: NON_EXISTENT_ID });
         const errorResponse = await response.json();
 
         expectCorrectResponse(response, 400, duration);
@@ -427,7 +443,7 @@ test.describe('PUT order', () => {
 
     test('should return 400 when updating to a non-existent product', async ({ request }) => {
         const ordersClient = new OrdersClient(request);
-        const { response, duration } = await ordersClient.putOrder(orderId, { product_id: 999999999 });
+        const { response, duration } = await ordersClient.putOrder(orderId, { product_id: NON_EXISTENT_ID });
         const errorResponse = await response.json();
 
         expectCorrectResponse(response, 400, duration);
@@ -441,7 +457,7 @@ test.describe('PUT order', () => {
         const originalResponse = await firstGetResponse.json();
         expectCorrectResponse(firstGetResponse, 200, firstGetDuration);
 
-        const { response, duration } = await ordersClient.putOrder(orderId, { user_id: 999999999 });
+        const { response, duration } = await ordersClient.putOrder(orderId, { user_id: NON_EXISTENT_ID });
         const errorResponse = await response.json();
         expectCorrectResponse(response, 400, duration);
         expect(errorResponse).toEqual({ error: 'User not found' });
@@ -454,7 +470,7 @@ test.describe('PUT order', () => {
     });
 
     const testCases = [
-        { scenario: 'should return 404 when updating a non-existent order', inputId: 999999999, data: { quantity: 5 }, errorCode: 404, expectedError: { error: 'Order not found' } },
+        { scenario: 'should return 404 when updating a non-existent order', inputId: NON_EXISTENT_ID, data: { quantity: 5 }, errorCode: 404, expectedError: { error: 'Order not found' } },
         { scenario: 'should return 400 when updating an order with invalid ID', inputId: 'invalid-id', data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 when updating the order with ID 0', inputId: 0, data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 when updating an order with a decimal ID', inputId: 1.5, data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
@@ -572,7 +588,7 @@ test.describe('DELETE order', () => {
 
     const testCases = [
         { scenario: 'should return 404 for an order with ID 0', orderId: 0, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 404 when deleting a non-existent order', orderId: 999999999, errorCode: 404, expectedError: { error: 'Order not found' } },
+        { scenario: 'should return 404 when deleting a non-existent order', orderId: NON_EXISTENT_ID, errorCode: 404, expectedError: { error: 'Order not found' } },
         { scenario: 'should return 400 when deleting an order with invalid ID', orderId: 'invalid-id', errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 when deleting an order with negative ID', orderId: -1, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
         { scenario: 'should return 400 when deleting an order with decimal ID', orderId: 1.5, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
