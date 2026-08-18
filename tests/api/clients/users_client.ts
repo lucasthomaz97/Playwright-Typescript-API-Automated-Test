@@ -7,7 +7,7 @@ export class UsersClient {
         return `test_${Date.now()}_${Math.random().toString(36).substring(2, 7)}@example.com`;
     }
 
-    async createUser(userData: { name?: any; email?: any }) {
+    async createUser(userData: Record<string, unknown>) {
         const start = Date.now()
         const response = await this.request.post('/users', {
             data: {
@@ -19,21 +19,21 @@ export class UsersClient {
         return { response, duration };
     }
 
-    async getUserById(userId: any) {
+    async getUserById(userId: number | string) {
         const start = Date.now();
         const response = await this.request.get(`/users/${userId}`);
         const duration = Date.now() - start;
         return { response, duration };
     }
 
-    async deleteUser(userId: any) {
+    async deleteUser(userId: number | string) {
         const start = Date.now();
         const response = await this.request.delete(`/users/${userId}`);
         const duration = Date.now() - start;
         return { response, duration };
     }
 
-    async editUser(userId: any, userData: {}) {
+    async editUser(userId: number | string, userData: Record<string, unknown>) {
         const start = Date.now();
         const response = await this.request.put(`/users/${userId}`, {
             data: userData,

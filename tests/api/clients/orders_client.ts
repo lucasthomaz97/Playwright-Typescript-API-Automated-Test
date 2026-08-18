@@ -3,7 +3,7 @@ import { APIRequestContext } from '@playwright/test';
 export class OrdersClient {
     constructor(private request: APIRequestContext) {}
 
-    async createOrder(orderData: {}) {
+    async createOrder(orderData: Record<string, unknown>) {
         const start = Date.now();
         const response = await this.request.post('/orders', {
             data: orderData,
@@ -19,14 +19,14 @@ export class OrdersClient {
         return { response, duration };
     }
 
-    async getOrderById(orderId: any) {
+    async getOrderById(orderId: number | string) {
         const start = Date.now();
         const response = await this.request.get(`/orders/${orderId}`);
         const duration = Date.now() - start;
         return { response, duration };
     }
 
-    async putOrder(orderId: any, orderData: {}) {
+    async putOrder(orderId: number | string, orderData: Record<string, unknown>) {
         const start = Date.now();
         const response = await this.request.put(`/orders/${orderId}`, {
             data: orderData,
@@ -35,7 +35,7 @@ export class OrdersClient {
         return { response, duration };
     }
 
-    async deleteOrder(orderId: any) {
+    async deleteOrder(orderId: number | string) {
         const start = Date.now();
         const response = await this.request.delete(`/orders/${orderId}`);
         const duration = Date.now() - start;

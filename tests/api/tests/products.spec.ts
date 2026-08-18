@@ -9,6 +9,7 @@ test.describe('GET Products', () => {
     test.beforeAll(async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
         const response = await productsClient.addProduct();
+        expect(response.ok()).toBeTruthy();
     });
 
     test('should return a list of products', async ({ request }) => {
@@ -82,6 +83,7 @@ test.describe('GET Product by ID', () => {
     test.beforeAll(async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
         const response = await productsClient.addProduct();
+        expect(response.ok()).toBeTruthy();
         const product = await response.json();
         productId = product.id;
     });
@@ -181,6 +183,7 @@ test.describe('PUT Product', () => {
     test.beforeAll(async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
         const response = await productsClient.addProduct();
+        expect(response.ok()).toBeTruthy();
         const product = await response.json();
         productId = product.id;
     });

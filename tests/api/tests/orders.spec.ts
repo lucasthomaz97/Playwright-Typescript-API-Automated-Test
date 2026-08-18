@@ -14,17 +14,20 @@ test.describe('GET orders', () => {
         const ordersClient = new OrdersClient(request);
 
         const { response: userRes, duration: userDuration } = await usersClient.createUser({ name: 'Test Order User', email: usersClient.generateEmail() });
+        expect(userRes.ok()).toBeTruthy();
         const user = await userRes.json();
 
         const productRes = await productsClient.addProduct();
+        expect(productRes.ok()).toBeTruthy();
         const product = await productRes.json();
 
-        await ordersClient.createOrder({
+        const { response: orderRes } = await ordersClient.createOrder({
             user_id: user.id,
             product_id: product.id,
             quantity: 1,
             total: '19.99',
         });
+        expect(orderRes.ok()).toBeTruthy();
     });
 
     test('should return a list of orders', async ({ request }) => {
@@ -130,9 +133,11 @@ test.describe('GET order by ID', () => {
         const ordersClient = new OrdersClient(request);
 
         const { response: userRes, duration: userDuration } = await usersClient.createUser({ name: 'Test Order By ID User', email: usersClient.generateEmail() });
+        expect(userRes.ok()).toBeTruthy();
         const user = await userRes.json();
 
         const productRes = await productsClient.addProduct();
+        expect(productRes.ok()).toBeTruthy();
         const product = await productRes.json();
 
         const { response: orderRes, duration: orderDuration } = await ordersClient.createOrder({
@@ -141,6 +146,7 @@ test.describe('GET order by ID', () => {
             quantity: 5,
             total: '99.95',
         });
+        expect(orderRes.ok()).toBeTruthy();
         const order = await orderRes.json();
         orderId = order.id;
     });
@@ -326,10 +332,12 @@ test.describe('PUT order', () => {
         const ordersClient = new OrdersClient(request);
 
         const { response: userRes, duration: userDuration } = await usersClient.createUser({ name: 'Test PUT Order User', email: usersClient.generateEmail() });
+        expect(userRes.ok()).toBeTruthy();
         const user = await userRes.json();
         userId = user.id;
 
         const productRes = await productsClient.addProduct();
+        expect(productRes.ok()).toBeTruthy();
         const product = await productRes.json();
         productId = product.id;
 
@@ -339,6 +347,7 @@ test.describe('PUT order', () => {
             quantity: 1,
             total: '19.99',
         });
+        expect(orderRes.ok()).toBeTruthy();
         const order = await orderRes.json();
         orderId = order.id;
     });
@@ -486,6 +495,7 @@ test.describe('PUT order', () => {
         { scenario: 'should return 400 when updating quantity with a string', inputId: null, data: { quantity: 'abc' }, errorCode: 400, expectedError: { error: 'quantity must be a positive integer' } },
         { scenario: 'should return 400 when updating quantity with a decimal', inputId: null, data: { quantity: 1.5 }, errorCode: 400, expectedError: { error: 'quantity must be a positive integer' } },
         { scenario: 'should return 400 when updating total with a number', inputId: null, data: { total: 39.99 }, errorCode: 400, expectedError: { error: 'total must be a positive numeric string' } },
+        { scenario: 'should return 400 when updating total with 0', inputId: null, data: { total: '0' }, errorCode: 400, expectedError: { error: 'total must be a positive numeric string' } },
         { scenario: 'should return 400 when updating total with a negative value', inputId: null, data: { total: '-10.00' }, errorCode: 400, expectedError: { error: 'total must be a positive numeric string' } },
         { scenario: 'should return 400 when updating total with a non-numeric string', inputId: null, data: { total: 'not-a-number' }, errorCode: 400, expectedError: { error: 'total must be a positive numeric string' } },
     ];

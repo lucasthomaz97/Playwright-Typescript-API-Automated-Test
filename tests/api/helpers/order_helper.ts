@@ -7,5 +7,6 @@ export function expectCorrectOrderData(order: Order) {
     expect(order.product_id).toBeGreaterThan(0);
     expect(order.quantity).toBeGreaterThan(0);
     expect(Number(order.total)).toBeGreaterThan(0);
-    expect(Date.parse(order.created_at)).not.toBeNaN();
+    expect(order.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(Date.now() - Date.parse(order.created_at)).toBeLessThan(60_000);
 }
