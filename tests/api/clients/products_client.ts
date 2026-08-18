@@ -15,41 +15,31 @@ export class ProductsClient {
     }
 
     async getProducts() {
-        const start = Date.now();
         const response = await this.request.get('/products');
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async getProductById(productId: number | string) {
-        const start = Date.now();
         const response = await this.request.get(`/products/${productId}`);
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async putProduct(productId: number | string, productData: Record<string, unknown>) {
-        const start = Date.now();
         const response = await this.request.put(`/products/${productId}`, {
             data: productData,
         });
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async postProduct(productData: Record<string, unknown>) {
-        const start = Date.now();
         const response = await this.request.post('/products', {
             data: productData,
         });
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async deleteProduct(productId: number | string) {
-        const start = Date.now();
         const response = await this.request.delete(`/products/${productId}`);
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 }

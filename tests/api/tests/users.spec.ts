@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { UsersClient } from '../clients/users_client';
+import { OrdersClient } from '../clients/orders_client';
+import { ProductsClient } from '../clients/products_client';
 import { expectCorrectUserData } from '../helpers/user_helper';
 import { NON_EXISTENT_ID } from '../helpers/constants';
 
@@ -9,7 +11,7 @@ test.describe('GET users', () => {
 
     test.beforeAll( async ({request}) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser({ name: 'Test User', email: usersClient.generateEmail() });
+        const response = await usersClient.createUser({ name: 'Test User', email: usersClient.generateEmail() });
         expect(response.ok()).toBeTruthy();
         const user = await response.json();
         userId = user.id;
@@ -17,10 +19,10 @@ test.describe('GET users', () => {
 
     test('should return a correspondent user by its id', async ({request})=> {
         const usersClient: UsersClient = new UsersClient(request);
-        const { response, duration } = await usersClient.getUserById(userId);
+        const response = await usersClient.getUserById(userId);
         const user = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(user).toEqual(
             expect.objectContaining({
                 id: userId,
@@ -36,16 +38,17 @@ test.describe('GET users', () => {
         {"scenario": "should return 404 for a non existent user id", "inputId": NON_EXISTENT_ID, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 400 for an invalid user id", "inputId": "invalid-id", "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 400 for a negative user id", "inputId": -1, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 for a decimal user id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}}
+        {"scenario": "should return 400 for a decimal user id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 404 for a zero user id", "inputId": 0, "statusCode": 404, "expectedBody": {"error": "User not found"}}
     ]
 
     testCases.forEach(({ scenario, inputId, statusCode, expectedBody }) => {
         test(scenario, async ( { request } ) => {
             const usersClient: UsersClient = new UsersClient(request);
-            const { response, duration } = await usersClient.getUserById(inputId);
+            const response = await usersClient.getUserById(inputId);
             const error = await response.json();
 
-            expectCorrectResponse(response, statusCode, duration);
+            expectCorrectResponse(response, statusCode);
             expect(error).toEqual(expectedBody);
         });
     });
@@ -57,10 +60,10 @@ test.describe('POST users', () => {
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
         }
-        const { response, duration } = await usersClient.createUser(userData);
+        const response = await usersClient.createUser(userData);
         const user = await response.json();
 
-        expectCorrectResponse(response, 201, duration);
+        expectCorrectResponse(response, 201);
         expect(user).toEqual(expect.objectContaining({
             id: expect.any(Number),
             name: userData.name,
@@ -75,15 +78,15 @@ test.describe('POST users', () => {
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
         }
-        const { response, duration } = await usersClient.createUser(userData);
+        const response = await usersClient.createUser(userData);
         const user = await response.json();
 
         expect(response.status()).toBe(201);
 
-        const {response: secondResponse, duration: secondDuration} = await usersClient.createUser(userData);
+        const secondResponse = await usersClient.createUser(userData);
         const error = await secondResponse.json();
 
-        expectCorrectResponse(secondResponse, 409, secondDuration);
+        expectCorrectResponse(secondResponse, 409);
         expect(error).toEqual({"error": "Email already exists"});
 
     });
@@ -103,10 +106,10 @@ test.describe('POST users', () => {
     testCases.forEach(({ scenario, data, statusCode, expectedBody}) => {
         test(scenario, async ({ request }) => {
             const usersClient: UsersClient = new UsersClient(request);
-            const {response, duration} = await usersClient.createUser(data);
+            const response = await usersClient.createUser(data);
             const ret = await response.json()
 
-            expectCorrectResponse(response, statusCode, duration);
+            expectCorrectResponse(response, statusCode);
             expect(ret).toEqual(expectedBody);
         });
     });
@@ -119,7 +122,7 @@ test.describe('PUT users', () => {
 
     test.beforeEach( async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
+        const response = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
         const user = await response.json();
         userId = user.id;
         userName = user.name;
@@ -129,10 +132,10 @@ test.describe('PUT users', () => {
     test('should update an user successfully', async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {name: 'Test Edited User', email: usersClient.generateEmail()};
-        const { response, duration } = await usersClient.editUser(userId, userData);
+        const response = await usersClient.editUser(userId, userData);
         const edited = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(edited).toEqual(expect.objectContaining({
             id: userId,
             name: userData.name,
@@ -145,10 +148,10 @@ test.describe('PUT users', () => {
     test('should update only the user name successfully', async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {name: 'Test Edited User'};
-        const { response, duration } = await usersClient.editUser(userId, userData);
+        const response = await usersClient.editUser(userId, userData);
         const edited = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(edited).toEqual(expect.objectContaining({
             id: userId,
             name: userData.name,
@@ -161,10 +164,10 @@ test.describe('PUT users', () => {
     test('should update only the user email successfully', async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {email: usersClient.generateEmail()};
-        const { response, duration } = await usersClient.editUser(userId, userData);
+        const response = await usersClient.editUser(userId, userData);
         const edited = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(edited).toEqual(expect.objectContaining({
             id: userId,
             name: expect.any(String),
@@ -176,30 +179,30 @@ test.describe('PUT users', () => {
 
     test('should return 409 when editing an user email to one already in use by another user', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser({ name: 'Test User Using Email', email: usersClient.generateEmail() });
+        const response = await usersClient.createUser({ name: 'Test User Using Email', email: usersClient.generateEmail() });
         const user = await response.json();
 
         const data = {name: 'Test Edited User', email: user.email};
-        const { response: editResponse, duration: editDuration } = await usersClient.editUser(userId, data);
+        const editResponse = await usersClient.editUser(userId, data);
         const edited = await editResponse.json();
 
-        expectCorrectResponse(editResponse, 409, editDuration);
+        expectCorrectResponse(editResponse, 409);
         expect(edited).toEqual({"error": "Email already exists"});
     });
 
     test('should not change user data when an error 409 occurs', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
+        const response = await usersClient.createUser({ name: 'Test User to Edit', email: usersClient.generateEmail() });
         const user = await response.json();
 
         const data = {name: 'Test Edited User', email: user.email};
-        const { response: editResponse, duration: editDuration } = await usersClient.editUser(userId, data);
+        const editResponse = await usersClient.editUser(userId, data);
         const edited = await editResponse.json();
 
-        expectCorrectResponse(editResponse, 409, editDuration);
+        expectCorrectResponse(editResponse, 409);
         expect(edited).toEqual({"error": "Email already exists"});
 
-        const {response: getResponse, duration: getDuration} = await usersClient.getUserById(userId);
+        const getResponse = await usersClient.getUserById(userId);
         const userData = await getResponse.json();
         expect(userData.name).toEqual(userName);
         expect(userData.email).toEqual(userEmail);
@@ -222,10 +225,10 @@ test.describe('PUT users', () => {
         test(scenario, async ({ request }) => {
             const usrId = inputId ?? userId;
             const usersClient: UsersClient = new UsersClient(request);
-            const { response, duration } = await usersClient.editUser(usrId, data);
+            const response = await usersClient.editUser(usrId, data);
             const res = await response.json();
 
-            expectCorrectResponse(response, statusCode, duration);
+            expectCorrectResponse(response, statusCode);
             expect(res).toEqual(expectedBody);
         });
     });
@@ -236,7 +239,7 @@ test.describe('DELETE users', () => {
 
     test.beforeAll( async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const {response, duration} = await usersClient.createUser({ name: 'Test User to Delete', email: usersClient.generateEmail() });
+        const response = await usersClient.createUser({ name: 'Test User to Delete', email: usersClient.generateEmail() });
         expect(response.ok()).toBeTruthy();
         const user = await response.json();
         userId = user.id;
@@ -244,10 +247,10 @@ test.describe('DELETE users', () => {
 
     test('should delete an existing user', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const { response, duration } = await usersClient.deleteUser(userId);
+        const response = await usersClient.deleteUser(userId);
         const user = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(user).toEqual(
             expect.objectContaining({
                 "message": "User deleted",
@@ -261,16 +264,57 @@ test.describe('DELETE users', () => {
         );
     });
 
+    test('should delete a user with associated orders via cascade', async ({ request }) => {
+        const usersClient = new UsersClient(request);
+        const productsClient = new ProductsClient(request);
+        const ordersClient = new OrdersClient(request);
+
+        const userRes = await usersClient.createUser({ name: 'Test User With Orders', email: usersClient.generateEmail() });
+        expect(userRes.ok()).toBeTruthy();
+        const user = await userRes.json();
+
+        const productRes = await productsClient.addProduct();
+        expect(productRes.ok()).toBeTruthy();
+        const product = await productRes.json();
+
+        const orderRes = await ordersClient.createOrder({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: 1,
+            total: '19.99',
+        });
+        expect(orderRes.ok()).toBeTruthy();
+        const createdOrder = await orderRes.json();
+
+        const deleteRes = await usersClient.deleteUser(user.id);
+        expectCorrectResponse(deleteRes, 200);
+        const deleteBody = await deleteRes.json();
+        expect(deleteBody).toEqual(
+            expect.objectContaining({
+                "message": "User deleted",
+                "user": {
+                    "id": user.id,
+                    "name": 'Test User With Orders',
+                    "email": expect.any(String),
+                    "created_at": expect.any(String)
+                }
+            })
+        );
+
+        const verifyRes = await ordersClient.getOrderById(createdOrder.id);
+        expect(verifyRes.status()).toBe(404);
+    });
+
     test('should return a 404 when trying to delete an user for the second time', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
 
-        const {response: createRes, duration: createDuration} = await usersClient.createUser({ name: 'Test User To Delete', email: usersClient.generateEmail() });
+        const createRes = await usersClient.createUser({ name: 'Test User To Delete', email: usersClient.generateEmail() });
         const user = await createRes.json();
         const newUserId = user.id;
 
-        const {response, duration} = await usersClient.deleteUser(newUserId);
+        const response = await usersClient.deleteUser(newUserId);
         const userDel = await response.json();
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(userDel).toEqual(
             expect.objectContaining({
                 "message": "User deleted",
@@ -283,9 +327,9 @@ test.describe('DELETE users', () => {
             })
         );
 
-        const {response: secondResponse, duration: secondDuration} = await usersClient.deleteUser(newUserId);
+        const secondResponse = await usersClient.deleteUser(newUserId);
         const errorRes = await secondResponse.json();
-        expectCorrectResponse(secondResponse, 404, secondDuration);
+        expectCorrectResponse(secondResponse, 404);
         expect(errorRes).toEqual({"error": "User not found"});
     });
 
@@ -300,10 +344,10 @@ test.describe('DELETE users', () => {
     testCases.forEach(({ scenario, inputId, statusCode, expectedBody }) => {
         test(scenario, async({ request }) => {
             const usersClient: UsersClient = new UsersClient(request);
-            const { response, duration } = await usersClient.deleteUser(inputId);
+            const response = await usersClient.deleteUser(inputId);
             const error = await response.json();
 
-            expectCorrectResponse(response, statusCode, duration);
+            expectCorrectResponse(response, statusCode);
             expect(error).toEqual(expectedBody);
         });
     })

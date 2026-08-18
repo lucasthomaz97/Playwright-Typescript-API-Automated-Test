@@ -8,38 +8,29 @@ export class UsersClient {
     }
 
     async createUser(userData: Record<string, unknown>) {
-        const start = Date.now()
         const response = await this.request.post('/users', {
             data: {
                 'name': userData.name,
                 'email': userData.email
             }
         });
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async getUserById(userId: number | string) {
-        const start = Date.now();
         const response = await this.request.get(`/users/${userId}`);
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async deleteUser(userId: number | string) {
-        const start = Date.now();
         const response = await this.request.delete(`/users/${userId}`);
-        const duration = Date.now() - start;
-        return { response, duration };
+        return response;
     }
 
     async editUser(userId: number | string, userData: Record<string, unknown>) {
-        const start = Date.now();
         const response = await this.request.put(`/users/${userId}`, {
             data: userData,
         });
-        const duration = Date.now() - start;
-
-        return { response, duration };
+        return response;
     }
 }

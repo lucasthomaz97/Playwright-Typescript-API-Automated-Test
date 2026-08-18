@@ -14,10 +14,10 @@ test.describe('GET Products', () => {
 
     test('should return a list of products', async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
-        const { response, duration } = await productsClient.getProducts();
+        const response = await productsClient.getProducts();
         const products = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(Array.isArray(products)).toBe(true);
 
         products.forEach((product: Product) => {
@@ -38,10 +38,10 @@ test.describe('GET Products', () => {
     test('should return more products after adding 10', async ({ request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
 
-        const { response: initialResponse, duration: initialDuration } = await productsClient.getProducts();
+        const initialResponse = await productsClient.getProducts();
         const initialProducts = await initialResponse.json();
         const initialSize = initialProducts.length;
-        expectCorrectResponse(initialResponse, 200, initialDuration);
+        expectCorrectResponse(initialResponse, 200);
 
         const addedIds: number[] = [];
         for (let i: number = 0; i < 10; i++) {
@@ -50,9 +50,9 @@ test.describe('GET Products', () => {
             addedIds.push(product.id);
         }
 
-        const { response, duration } = await productsClient.getProducts();
+        const response = await productsClient.getProducts();
         const products = await response.json();
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
 
         expect(products.length).toBeGreaterThan(initialSize);
 
@@ -90,10 +90,10 @@ test.describe('GET Product by ID', () => {
 
     test('should return a product by ID', async ( { request }) => {
         const productsClient: ProductsClient = new ProductsClient(request);
-        const { response, duration } = await productsClient.getProductById(productId);
+        const response = await productsClient.getProductById(productId);
         const product = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(product).toEqual(
             expect.objectContaining({
                 id: productId,
@@ -118,10 +118,10 @@ test.describe('GET Product by ID', () => {
     testCases.forEach(({ scenario, productId, errorCode, expectedError }) => {
         test(scenario, async ( { request }) => {
             const productsClient: ProductsClient = new ProductsClient(request);
-            const { response, duration } = await productsClient.getProductById(productId);
+            const response = await productsClient.getProductById(productId);
             const errorResponse = await response.json();
 
-            expectCorrectResponse(response, errorCode, duration);
+            expectCorrectResponse(response, errorCode);
             expect(errorResponse).toEqual(expectedError);
         });
     });
@@ -136,10 +136,10 @@ test.describe('POST Product', () => {
         };
 
         const productsClient: ProductsClient = new ProductsClient(request);
-        const { response, duration } = await productsClient.postProduct(productData);
+        const response = await productsClient.postProduct(productData);
         const product = await response.json();
 
-        expectCorrectResponse(response, 201, duration);
+        expectCorrectResponse(response, 201);
         expect(product).toEqual({
             id: expect.any(Number),
             name: productData.name,
@@ -157,20 +157,21 @@ test.describe('POST Product', () => {
         {"scenario": "should return 400 when creating a product with non-string name", "productData": { name: 123, price: '29.99', description: 'This is a new product' }, "errorCode": 400, "expectedError": { error: 'Name must be a string' }},
         {"scenario": "should return 400 when creating a product with no price", "productData": { name: 'Test Product without price', price: '', description: 'This is a new product' }, "errorCode": 400, "expectedError": { error: 'Name and price are required' }},
         {"scenario": "should return 400 when creating a product with non-numeric-string price", "productData": { name: 'Test Invalid Price Product', price: 'not-a-number', description: 'This product has an invalid price' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
+        {"scenario": "should return 400 when creating a product with no description field", "productData": { name: 'Test Product', price: '29.99' }, "errorCode": 400, "expectedError": { error: 'Description must be a string' }},
         {"scenario": "should return 400 when creating a product with zero price", "productData": {name: "Test Free Product", price: '0.00', description:"For free!"}, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
         {"scenario": "should return 400 when creating a product with non-string price", "productData": { name: 'Test Invalid Price Product', price: 123, description: 'This product has an invalid price' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
         {"scenario": "should return 400 when creating a product with negative price", "productData": { name: 'Test Negative Price Product', price: '-10.00', description: 'This product has a negative price' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
         {"scenario": "should return 400 when creating a product with non-string description", "productData": { name: 'Test Invalid Description Product', price: '29.99', description: 123 }, "errorCode": 400, "expectedError": { error: 'Description must be a string' }},
-        {"scenario": "should create a new product with an empty description", "productData": { name: 'Test Product with empty description', price: '29.99', description: '' }, "errorCode":201, "expectedError": {id: expect.any(Number), name: expect.any(String), price: expect.any(String), description: expect.any(String), created_at: expect.any(String)}}
+        {"scenario": "should create a new product with an empty description", "productData": { name: 'Test Product with empty description', price: '29.99', description: '' }, "errorCode":201, "expectedError": {id: expect.any(Number), name: 'Test Product with empty description', price: '29.99', description: '', created_at: expect.any(String)}}
     ];
 
     testCases.forEach(({ scenario, productData, errorCode, expectedError }) => {
         test(scenario, async ( { request }) => {
             const productsClient: ProductsClient = new ProductsClient(request);
-            const { response, duration } = await productsClient.postProduct(productData);
+            const response = await productsClient.postProduct(productData);
             const errorResponse = await response.json();
 
-            expectCorrectResponse(response, errorCode, duration);
+            expectCorrectResponse(response, errorCode);
             expect(errorResponse).toEqual(expectedError);
         });
     });
@@ -195,10 +196,10 @@ test.describe('PUT Product', () => {
             description: 'This is an updated product',
         };
         const productsClient: ProductsClient = new ProductsClient(request);
-        const { response, duration } = await productsClient.putProduct(productId, updatedProductData);
+        const response = await productsClient.putProduct(productId, updatedProductData);
         const updatedProduct = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(updatedProduct).toEqual({
             id: productId,
             name: updatedProductData.name,
@@ -216,19 +217,19 @@ test.describe('PUT Product', () => {
         };
         const productsClient: ProductsClient = new ProductsClient(request);
 
-        const { response: firstGetResponse, duration: firstGetDuration} = await productsClient.getProductById(productId);
+        const firstGetResponse = await productsClient.getProductById(productId);
         const originalResponse = await firstGetResponse.json();
-        expectCorrectResponse(firstGetResponse, 200, firstGetDuration);
+        expectCorrectResponse(firstGetResponse, 200);
 
-        const { response, duration } = await productsClient.putProduct(productId, updatedProductData);
+        const response = await productsClient.putProduct(productId, updatedProductData);
         const updatedProduct = await response.json();
-        expectCorrectResponse(response, 400, duration);
+        expectCorrectResponse(response, 400);
 
         expect(updatedProduct).toEqual({ error: 'Price must be a positive numeric string' });
 
-        const { response: lastGetResponse, duration: lastGetDuration} = await productsClient.getProductById(productId);
+        const lastGetResponse = await productsClient.getProductById(productId);
         const lastResponse = await lastGetResponse.json();
-        expectCorrectResponse(lastGetResponse, 200, lastGetDuration);
+        expectCorrectResponse(lastGetResponse, 200);
 
         expect(lastResponse).toEqual(originalResponse);
     });
@@ -241,25 +242,25 @@ test.describe('PUT Product', () => {
         {"scenario": "should return 400 when trying to update a product with a negative ID", "inputId": -1, "productData": {name: 'Test Negative Product', price: '10.00', description: 'This is a negative product'}, "errorCode": 400, "expectedError": { error: 'Invalid product ID' }},
         {"scenario": "should return 400 when updating a product with missing fields", "inputId": null, "productData": { name: '', price: '', description: '' }, "errorCode": 400, "expectedError": { error: 'At least one field must be provided' }},
         {"scenario": "should return 400 when updating a product with no fields", "inputId": null, "productData": {}, "errorCode": 400, "expectedError": { error: 'At least one field must be provided' }},
-        {"scenario": "should return 200 when updating a product with only name", "inputId": null, "productData": { name: 'Test Updated Product' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: expect.any(String), price: expect.any(String), description: expect.any(String), created_at: expect.any(String) }},
+        {"scenario": "should return 200 when updating a product with only name", "inputId": null, "productData": { name: 'Test Updated Product' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: 'Test Updated Product', price: '39.99', description: 'This is an updated product', created_at: expect.any(String) }},
         {"scenario": "should return 400 when updating a product with non-string name", "inputId": null, "productData": { name: 123, price: '39.99', description: 'This is an updated product' }, "errorCode": 400, "expectedError": { error: 'Name must be a string' }},
-        {"scenario": "should return 200 when updating a product with only price", "inputId": null, "productData": { price: '49.99' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: expect.any(String), price: expect.any(String), description: expect.any(String), created_at: expect.any(String) }},
+        {"scenario": "should return 200 when updating a product with only price", "inputId": null, "productData": { price: '49.99' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: 'Test Updated Product', price: '49.99', description: 'This is an updated product', created_at: expect.any(String) }},
         {"scenario": "should return 400 when updating a product with non-numeric-string price", "inputId": null, "productData": { name: 'Test Updated Product', price: 'not-a-number', description: 'This is an updated product' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
         {"scenario": "should return 400 when updating a product with non-string price", "inputId": null, "productData": { name: 'Test Updated Product', price: 123, description: 'This is an updated product' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
         {"scenario": "should return 400 when updating a product with negative price", "inputId": null, "productData": { name: 'Test Updated Product', price: '-10.00', description: 'This is an updated product' }, "errorCode": 400, "expectedError": { error: 'Price must be a positive numeric string' }},
-        {"scenario": "should return 200 when updating a product with only description", "inputId": null, "productData": { description: 'This is an updated product' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: expect.any(String), price: expect.any(String), description: expect.any(String), created_at: expect.any(String) }},
+        {"scenario": "should return 200 when updating a product with only description", "inputId": null, "productData": { description: 'This is an updated product' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: 'Test Updated Product', price: '49.99', description: 'This is an updated product', created_at: expect.any(String) }},
         {"scenario": "should return 400 when updating a product with non-string description", "inputId": null, "productData": { name: 'Test Updated Product', price: '39.99', description: 123 }, "errorCode": 400, "expectedError": { error: 'Description must be a string' }},
-        {"scenario": "should return 200 when updating a product with no description", "inputId": null, "productData": { name: 'Test Updated Product', price: '39.99' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: expect.any(String), price: expect.any(String), description: expect.any(String), created_at: expect.any(String) }}
+        {"scenario": "should return 200 when updating a product with no description", "inputId": null, "productData": { name: 'Test Updated Product', price: '39.99' }, "errorCode": 200, "expectedError": { id: expect.any(Number), name: 'Test Updated Product', price: '39.99', description: 'This is an updated product', created_at: expect.any(String) }}
     ];
 
     testCases.forEach(({scenario, inputId, productData, errorCode, expectedError}) => {
         test(scenario, async ({ request }) => {
             let id = inputId ?? productId;
             const productsClient: ProductsClient = new ProductsClient(request);
-            const { response, duration } = await productsClient.putProduct(id, productData);
+            const response = await productsClient.putProduct(id, productData);
             const errorResponse = await response.json();
 
-            expectCorrectResponse(response, errorCode, duration);
+            expectCorrectResponse(response, errorCode);
             expect(errorResponse).toEqual(expectedError);
         });
     });
@@ -273,10 +274,10 @@ test.describe('DELETE Product', () => {
         const product = await addResponse.json();
         let id = product.id;
 
-        const { response, duration } = await productsClient.deleteProduct(id);
+        const response = await productsClient.deleteProduct(id);
         const deletedProduct = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(deletedProduct).toEqual({
             "message": "Product deleted",
             "product": {
@@ -289,8 +290,8 @@ test.describe('DELETE Product', () => {
         });
         expectCorrectProductData(deletedProduct.product);
 
-        const { response: getResponse, duration: getDuration } = await productsClient.getProductById(id);
-        expectCorrectResponse(getResponse, 404, getDuration);
+        const getResponse = await productsClient.getProductById(id);
+        expectCorrectResponse(getResponse, 404);
         expect(await getResponse.json()).toEqual({ error: 'Product not found' });
     });
 
@@ -301,10 +302,10 @@ test.describe('DELETE Product', () => {
         const product = await res.json();
         let id = product.id;
 
-        const { response, duration } = await productsClient.deleteProduct(id);
+        const response = await productsClient.deleteProduct(id);
         const errorResponse = await response.json();
 
-        expectCorrectResponse(response, 200, duration);
+        expectCorrectResponse(response, 200);
         expect(errorResponse).toEqual({
             "message": "Product deleted",
             "product": {
@@ -316,9 +317,9 @@ test.describe('DELETE Product', () => {
             }
         });
 
-        const { response: secondResponse, duration: secondDuration } = await productsClient.deleteProduct(id);
+        const secondResponse = await productsClient.deleteProduct(id);
         const secondErrorResponse = await secondResponse.json();
-        expectCorrectResponse(secondResponse, 404, secondDuration);
+        expectCorrectResponse(secondResponse, 404);
         expect(secondErrorResponse).toEqual({ error: 'Product not found' });
     });
 
@@ -333,10 +334,10 @@ test.describe('DELETE Product', () => {
     testCases.forEach(({ scenario, productId, errorCode, expectedError }) => {
         test(scenario, async ( { request }) => {
             const productsClient: ProductsClient = new ProductsClient(request);
-            const { response, duration } = await productsClient.deleteProduct(productId);
+            const response = await productsClient.deleteProduct(productId);
             const errorResponse = await response.json();
 
-            expectCorrectResponse(response, errorCode, duration);
+            expectCorrectResponse(response, errorCode);
             expect(errorResponse).toEqual(expectedError);
         });
     });
