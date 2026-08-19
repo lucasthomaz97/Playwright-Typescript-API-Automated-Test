@@ -6,28 +6,12 @@ import { Order } from '../models/Order';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { expectCorrectOrderData } from '../helpers/order_helper';
 import { NON_EXISTENT_ID } from '../helpers/constants';
+import { createOrderPrerequisites } from '../helpers/order_prerequisite_helper';
+import { generateInvalidIdCases } from '../helpers/invalid_id_test_cases';
 
 test.describe('GET orders', () => {
     test.beforeAll(async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
-        const ordersClient = new OrdersClient(request);
-
-        const userRes = await usersClient.createUser({ name: 'Test Order User', email: usersClient.generateEmail() });
-        expect(userRes.ok()).toBeTruthy();
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        expect(productRes.ok()).toBeTruthy();
-        const product = await productRes.json();
-
-        const orderRes = await ordersClient.createOrder({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: 1,
-            total: '19.99',
-        });
-        expect(orderRes.ok()).toBeTruthy();
+        await createOrderPrerequisites(request);
     });
 
     test('should return a list of orders', async ({ request }) => {
@@ -128,27 +112,8 @@ test.describe('GET order by ID', () => {
     let orderId: number;
 
     test.beforeAll(async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
-        const ordersClient = new OrdersClient(request);
-
-        const userRes = await usersClient.createUser({ name: 'Test Order By ID User', email: usersClient.generateEmail() });
-        expect(userRes.ok()).toBeTruthy();
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        expect(productRes.ok()).toBeTruthy();
-        const product = await productRes.json();
-
-        const orderRes = await ordersClient.createOrder({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: 5,
-            total: '99.95',
-        });
-        expect(orderRes.ok()).toBeTruthy();
-        const order = await orderRes.json();
-        orderId = order.id;
+        const { orderId: id } = await createOrderPrerequisites(request, { quantity: 5, total: '99.95' });
+        orderId = id;
     });
 
     test('should return an order by ID', async ({ request }) => {
@@ -180,13 +145,8 @@ test.describe('GET order by ID', () => {
         expectCorrectOrderData(order);
     });
 
-    const testCases = [
-        { scenario: 'should return 404 for an order with ID 0', orderId: 0, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 404 for a non-existent order ID', orderId: NON_EXISTENT_ID, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 400 for an invalid order ID', orderId: 'invalid-id', errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 for a negative order ID', orderId: -1, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 for a decimal order ID', orderId: 1.5, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-    ];
+    const testCases = generateInvalidIdCases('order', 'Order not found', 'Invalid order ID')
+        .map(tc => ({ ...tc, orderId: tc.inputId }));
 
     testCases.forEach(({ scenario, orderId, errorCode, expectedError }) => {
         test(scenario, async ({ request }) => {
@@ -202,19 +162,12 @@ test.describe('GET order by ID', () => {
 
 test.describe('POST order', () => {
     test('should create an order successfully', async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
+        const { userId, productId } = await createOrderPrerequisites(request);
+
         const ordersClient = new OrdersClient(request);
-
-        const userRes = await usersClient.createUser({ name: 'Test POST Order User', email: usersClient.generateEmail() });
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        const product = await productRes.json();
-
         const orderData = {
-            user_id: user.id,
-            product_id: product.id,
+            user_id: userId,
+            product_id: productId,
             quantity: 2,
             total: '39.98',
         };
@@ -225,8 +178,8 @@ test.describe('POST order', () => {
         expectCorrectResponse(response, 201);
         expect(order).toEqual({
             id: expect.any(Number),
-            user_id: user.id,
-            product_id: product.id,
+            user_id: userId,
+            product_id: productId,
             quantity: 2,
             total: '39.98',
             created_at: expect.any(String),
@@ -332,29 +285,10 @@ test.describe('PUT order', () => {
     let productId: number;
 
     test.beforeAll(async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
-        const ordersClient = new OrdersClient(request);
-
-        const userRes = await usersClient.createUser({ name: 'Test PUT Order User', email: usersClient.generateEmail() });
-        expect(userRes.ok()).toBeTruthy();
-        const user = await userRes.json();
-        userId = user.id;
-
-        const productRes = await productsClient.addProduct();
-        expect(productRes.ok()).toBeTruthy();
-        const product = await productRes.json();
-        productId = product.id;
-
-        const orderRes = await ordersClient.createOrder({
-            user_id: userId,
-            product_id: productId,
-            quantity: 1,
-            total: '19.99',
-        });
-        expect(orderRes.ok()).toBeTruthy();
-        const order = await orderRes.json();
-        orderId = order.id;
+        const result = await createOrderPrerequisites(request);
+        userId = result.userId;
+        productId = result.productId;
+        orderId = result.orderId;
     });
 
     test('should update an existing order', async ({ request }) => {
@@ -499,11 +433,12 @@ test.describe('PUT order', () => {
     });
 
     const testCases = [
-        { scenario: 'should return 404 when updating a non-existent order', inputId: NON_EXISTENT_ID, data: { quantity: 5 }, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 400 when updating an order with invalid ID', inputId: 'invalid-id', data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 when updating the order with ID 0', inputId: 0, data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 when updating an order with a decimal ID', inputId: 1.5, data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 when updating an order with a negative ID', inputId: -1, data: { quantity: 5 }, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
+        ...generateInvalidIdCases('order', 'Order not found', 'Invalid order ID')
+            .map(tc => tc.inputId === 0
+                ? { ...tc, errorCode: 400, expectedError: { error: 'Invalid order ID' } }
+                : tc
+            )
+            .map(tc => ({ ...tc, data: { quantity: 5 } })),
         { scenario: 'should return 400 when updating an order with no fields', inputId: null, data: {}, errorCode: 400, expectedError: { error: 'At least one field must be provided' } },
         { scenario: 'should return 400 when updating user_id with a string', inputId: null, data: { user_id: 'abc' }, errorCode: 400, expectedError: { error: 'user_id must be a positive integer' } },
         { scenario: 'should return 400 when updating user_id with 0', inputId: null, data: { user_id: 0 }, errorCode: 400, expectedError: { error: 'user_id must be a positive integer' } },
@@ -538,34 +473,19 @@ test.describe('PUT order', () => {
 
 test.describe('DELETE order', () => {
     test('should delete an existing order', async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
+        const { userId, productId, orderId: createdOrderId } = await createOrderPrerequisites(request);
         const ordersClient = new OrdersClient(request);
 
-        const userRes = await usersClient.createUser({ name: 'Test DELETE Order User', email: usersClient.generateEmail() });
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        const product = await productRes.json();
-
-        const createRes = await ordersClient.createOrder({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: 1,
-            total: '19.99',
-        });
-        const createdOrder = await createRes.json();
-
-        const response = await ordersClient.deleteOrder(createdOrder.id);
+        const response = await ordersClient.deleteOrder(createdOrderId);
         const deletedOrder = await response.json();
 
         expectCorrectResponse(response, 200);
         expect(deletedOrder).toEqual({
             message: 'Order deleted',
             order: {
-                id: createdOrder.id,
-                user_id: user.id,
-                product_id: product.id,
+                id: createdOrderId,
+                user_id: userId,
+                product_id: productId,
                 quantity: 1,
                 total: '19.99',
                 created_at: expect.any(String),
@@ -573,59 +493,39 @@ test.describe('DELETE order', () => {
         });
         expectCorrectOrderData(deletedOrder.order);
 
-        const getResponse = await ordersClient.getOrderById(createdOrder.id);
+        const getResponse = await ordersClient.getOrderById(createdOrderId);
         expectCorrectResponse(getResponse, 404);
         expect(await getResponse.json()).toEqual({ error: 'Order not found' });
     });
 
     test('should return 404 when trying to delete an order for a second time', async ({ request }) => {
-        const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
+        const { userId, productId, orderId: createdOrderId } = await createOrderPrerequisites(request);
         const ordersClient = new OrdersClient(request);
 
-        const userRes = await usersClient.createUser({ name: 'Test DELETE Twice User', email: usersClient.generateEmail() });
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        const product = await productRes.json();
-
-        const createRes = await ordersClient.createOrder({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: 1,
-            total: '19.99',
-        });
-        const createdOrder = await createRes.json();
-
-        const response = await ordersClient.deleteOrder(createdOrder.id);
+        const response = await ordersClient.deleteOrder(createdOrderId);
         const deletedOrder = await response.json();
 
         expectCorrectResponse(response, 200);
         expect(deletedOrder).toEqual({
             message: 'Order deleted',
             order: {
-                id: createdOrder.id,
-                user_id: user.id,
-                product_id: product.id,
+                id: createdOrderId,
+                user_id: userId,
+                product_id: productId,
                 quantity: 1,
                 total: '19.99',
                 created_at: expect.any(String),
             },
         });
 
-        const secondResponse = await ordersClient.deleteOrder(createdOrder.id);
+        const secondResponse = await ordersClient.deleteOrder(createdOrderId);
         const secondErrorResponse = await secondResponse.json();
         expectCorrectResponse(secondResponse, 404);
         expect(secondErrorResponse).toEqual({ error: 'Order not found' });
     });
 
-    const testCases = [
-        { scenario: 'should return 404 for an order with ID 0', orderId: 0, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 404 when deleting a non-existent order', orderId: NON_EXISTENT_ID, errorCode: 404, expectedError: { error: 'Order not found' } },
-        { scenario: 'should return 400 when deleting an order with invalid ID', orderId: 'invalid-id', errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 when deleting an order with negative ID', orderId: -1, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-        { scenario: 'should return 400 when deleting an order with decimal ID', orderId: 1.5, errorCode: 400, expectedError: { error: 'Invalid order ID' } },
-    ];
+    const testCases = generateInvalidIdCases('order', 'Order not found', 'Invalid order ID')
+        .map(tc => ({ ...tc, orderId: tc.inputId }));
 
     testCases.forEach(({ scenario, orderId, errorCode, expectedError }) => {
         test(scenario, async ({ request }) => {

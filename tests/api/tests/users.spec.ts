@@ -5,6 +5,7 @@ import { OrdersClient } from '../clients/orders_client';
 import { ProductsClient } from '../clients/products_client';
 import { expectCorrectUserData } from '../helpers/user_helper';
 import { NON_EXISTENT_ID } from '../helpers/constants';
+import { createOrderPrerequisites } from '../helpers/order_prerequisite_helper';
 
 test.describe('GET users', () => {
     let userId: number;
@@ -265,43 +266,26 @@ test.describe('DELETE users', () => {
     });
 
     test('should delete a user with associated orders via cascade', async ({ request }) => {
+        const { userId, orderId } = await createOrderPrerequisites(request);
         const usersClient = new UsersClient(request);
-        const productsClient = new ProductsClient(request);
         const ordersClient = new OrdersClient(request);
 
-        const userRes = await usersClient.createUser({ name: 'Test User With Orders', email: usersClient.generateEmail() });
-        expect(userRes.ok()).toBeTruthy();
-        const user = await userRes.json();
-
-        const productRes = await productsClient.addProduct();
-        expect(productRes.ok()).toBeTruthy();
-        const product = await productRes.json();
-
-        const orderRes = await ordersClient.createOrder({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: 1,
-            total: '19.99',
-        });
-        expect(orderRes.ok()).toBeTruthy();
-        const createdOrder = await orderRes.json();
-
-        const deleteRes = await usersClient.deleteUser(user.id);
+        const deleteRes = await usersClient.deleteUser(userId);
         expectCorrectResponse(deleteRes, 200);
         const deleteBody = await deleteRes.json();
         expect(deleteBody).toEqual(
             expect.objectContaining({
                 "message": "User deleted",
                 "user": {
-                    "id": user.id,
-                    "name": 'Test User With Orders',
+                    "id": userId,
+                    "name": 'Test Order User',
                     "email": expect.any(String),
                     "created_at": expect.any(String)
                 }
             })
         );
 
-        const verifyRes = await ordersClient.getOrderById(createdOrder.id);
+        const verifyRes = await ordersClient.getOrderById(orderId);
         expect(verifyRes.status()).toBe(404);
     });
 
