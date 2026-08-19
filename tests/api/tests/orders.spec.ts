@@ -4,12 +4,12 @@ import { ProductsClient } from '../clients/products_client';
 import { UsersClient } from '../clients/users_client';
 import { Order } from '../models/Order';
 import { expectCorrectResponse } from '../helpers/response_helper';
-import { expectCorrectOrderData } from '../helpers/order_helper';
+import { expectCorrectOrderData, expectOrderShape } from '../helpers/order_helper';
 import { NON_EXISTENT_ID } from '../helpers/constants';
 import { createOrderPrerequisites } from '../helpers/order_prerequisite_helper';
 import { generateInvalidIdCases } from '../helpers/invalid_id_test_cases';
 
-test.describe('GET orders', () => {
+test.describe('get orders', () => {
     test.beforeAll(async ({ request }) => {
         await createOrderPrerequisites(request);
     });
@@ -23,26 +23,8 @@ test.describe('GET orders', () => {
         expect(Array.isArray(orders)).toBe(true);
 
         orders.forEach((order: Order) => {
-            expect(order).toEqual(
-                expect.objectContaining({
-                    id: expect.any(Number),
-                    user_id: expect.any(Number),
-                    product_id: expect.any(Number),
-                    quantity: expect.any(Number),
-                    total: expect.any(String),
-                    created_at: expect.any(String),
-                    user_name: expect.any(String),
-                    user_email: expect.any(String),
-                    product_name: expect.any(String),
-                    product_price: expect.any(String),
-                })
-            );
-
+            expectOrderShape(order);
             expectCorrectOrderData(order);
-            expect(order.user_name?.trim()).not.toBe('');
-            expect(order.user_email).toContain('@');
-            expect(order.product_name?.trim()).not.toBe('');
-            expect(Number(order.product_price)).toBeGreaterThan(0);
         });
     });
 
@@ -108,7 +90,7 @@ test.describe('GET orders', () => {
     });
 });
 
-test.describe('GET order by ID', () => {
+test.describe('get order by ID', () => {
     let orderId: number;
 
     test.beforeAll(async ({ request }) => {
@@ -160,7 +142,7 @@ test.describe('GET order by ID', () => {
     });
 });
 
-test.describe('POST order', () => {
+test.describe('post order', () => {
     test('should create an order successfully', async ({ request }) => {
         const { userId, productId } = await createOrderPrerequisites(request);
 
@@ -279,35 +261,33 @@ test.describe('POST order', () => {
     });
 });
 
-test.describe('PUT order', () => {
+test.describe('put order', () => {
     let orderId: number;
-    let userId: number;
-    let productId: number;
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeEach(async ({ request }) => {
         const result = await createOrderPrerequisites(request);
-        userId = result.userId;
-        productId = result.productId;
         orderId = result.orderId;
+    });
+
+    test.afterEach(async ({ request }) => {
+        const ordersClient = new OrdersClient(request);
+        try { await ordersClient.deleteOrder(orderId); } catch {}
     });
 
     test('should update an existing order', async ({ request }) => {
         const ordersClient = new OrdersClient(request);
-        const updatedOrderData = {
-            user_id: userId,
-            product_id: productId,
+
+        const response = await ordersClient.putOrder(orderId, {
             quantity: 10,
             total: '199.90',
-        };
-
-        const response = await ordersClient.putOrder(orderId, updatedOrderData);
+        });
         const updatedOrder = await response.json();
 
         expectCorrectResponse(response, 200);
         expect(updatedOrder).toEqual({
             id: orderId,
-            user_id: userId,
-            product_id: productId,
+            user_id: expect.any(Number),
+            product_id: expect.any(Number),
             quantity: 10,
             total: '199.90',
             created_at: expect.any(String),
@@ -323,10 +303,8 @@ test.describe('PUT order', () => {
         expect(updatedOrder).toEqual(
             expect.objectContaining({
                 id: orderId,
-                user_id: userId,
-                product_id: productId,
                 quantity: 25,
-                total: '199.90',
+                total: '19.99',
                 created_at: expect.any(String)
             })
         );
@@ -334,17 +312,15 @@ test.describe('PUT order', () => {
 
     test('should update only the total', async ({ request }) => {
         const ordersClient = new OrdersClient(request);
-        const response = await ordersClient.putOrder(orderId, { total: '499.75' });
+        const response = await ordersClient.putOrder(orderId, { total: '99.99' });
         const updatedOrder = await response.json();
 
         expectCorrectResponse(response, 200);
         expect(updatedOrder).toEqual(
             expect.objectContaining({
                 id: orderId,
-                user_id: userId,
-                product_id: productId,
-                quantity: 25,
-                total: '499.75',
+                quantity: 1,
+                total: '99.99',
                 created_at: expect.any(String)
             })
         );
@@ -365,9 +341,8 @@ test.describe('PUT order', () => {
             expect.objectContaining({
                 id: orderId,
                 user_id: newUser.id,
-                product_id: productId,
-                quantity: 25,
-                total: '499.75',
+                quantity: 1,
+                total: '19.99',
                 created_at: expect.any(String)
             })
         );
@@ -388,8 +363,8 @@ test.describe('PUT order', () => {
             expect.objectContaining({
                 id: orderId,
                 product_id: newProduct.id,
-                quantity: 25,
-                total: '499.75',
+                quantity: 1,
+                total: '19.99',
                 created_at: expect.any(String)
             })
         );
@@ -471,7 +446,7 @@ test.describe('PUT order', () => {
     });
 });
 
-test.describe('DELETE order', () => {
+test.describe('delete order', () => {
     test('should delete an existing order', async ({ request }) => {
         const { userId, productId, orderId: createdOrderId } = await createOrderPrerequisites(request);
         const ordersClient = new OrdersClient(request);

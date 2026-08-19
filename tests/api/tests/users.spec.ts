@@ -2,12 +2,11 @@ import { test, expect } from '@playwright/test';
 import { expectCorrectResponse } from '../helpers/response_helper';
 import { UsersClient } from '../clients/users_client';
 import { OrdersClient } from '../clients/orders_client';
-import { ProductsClient } from '../clients/products_client';
 import { expectCorrectUserData } from '../helpers/user_helper';
 import { NON_EXISTENT_ID } from '../helpers/constants';
 import { createOrderPrerequisites } from '../helpers/order_prerequisite_helper';
 
-test.describe('GET users', () => {
+test.describe('get users', () => {
     let userId: number;
 
     test.beforeAll( async ({request}) => {
@@ -55,8 +54,8 @@ test.describe('GET users', () => {
     });
 });
 
-test.describe('POST users', () => {
-    test('should create an user successfully', async({ request })=>{
+test.describe('post user', () => {
+    test('should create a user successfully', async({ request })=>{
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
@@ -74,7 +73,7 @@ test.describe('POST users', () => {
         expectCorrectUserData(user);
     });
 
-    test('should return 409 when creating an user with an email already in use', async({ request }) => {
+    test('should return 409 when creating a user with an email already in use', async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {
             name: 'Test New User', email: usersClient.generateEmail()
@@ -93,15 +92,15 @@ test.describe('POST users', () => {
     });
 
     const testCases = [
-        {"scenario": "should return 400 when trying to create an user with empty fields", "data": {name: "", "email": ""}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with no fields", "data": {}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with empty name", "data": {name: "", "email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with no name field", "data": {"email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with a numeric value in the name field", "data": {name: 2026, "email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": 'Name must be a string'}},
-        {"scenario": "should return 400 when trying to create an user with empty email", "data": {name: "Post Tests", "email": ""}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with no email field", "data": {name: "Post Tests"}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
-        {"scenario": "should return 400 when trying to create an user with a numeric value in the email field", "data": {name: "Post Tests", "email": 2026}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}},
-        {"scenario": "should return 400 when trying to create an user with an invalid email string in the email field", "data": {name: "Post Tests", "email": "pretend_to_be_email"}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}}
+        {"scenario": "should return 400 when trying to create a user with empty fields", "data": {name: "", "email": ""}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with no fields", "data": {}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with empty name", "data": {name: "", "email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with no name field", "data": {"email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with a numeric value in the name field", "data": {name: 2026, "email": `post_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": 'Name must be a string'}},
+        {"scenario": "should return 400 when trying to create a user with empty email", "data": {name: "Post Tests", "email": ""}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with no email field", "data": {name: "Post Tests"}, "statusCode": 400, "expectedBody": {"error": "Name and email are required"}},
+        {"scenario": "should return 400 when trying to create a user with a numeric value in the email field", "data": {name: "Post Tests", "email": 2026}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}},
+        {"scenario": "should return 400 when trying to create a user with an invalid email string in the email field", "data": {name: "Post Tests", "email": "pretend_to_be_email"}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}}
     ]
 
     testCases.forEach(({ scenario, data, statusCode, expectedBody}) => {
@@ -116,7 +115,7 @@ test.describe('POST users', () => {
     });
 });
 
-test.describe('PUT users', () => {
+test.describe('put user', () => {
     let userId: number;
     let userName: string;
     let userEmail: string;
@@ -130,7 +129,7 @@ test.describe('PUT users', () => {
         userEmail = user.email;
     });
 
-    test('should update an user successfully', async({ request }) => {
+    test('should update a user successfully', async({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const userData = {name: 'Test Edited User', email: usersClient.generateEmail()};
         const response = await usersClient.editUser(userId, userData);
@@ -156,7 +155,7 @@ test.describe('PUT users', () => {
         expect(edited).toEqual(expect.objectContaining({
             id: userId,
             name: userData.name,
-            email: expect.any(String),
+            email: userEmail,
             created_at: expect.any(String)
         }));
         expectCorrectUserData(edited);
@@ -171,14 +170,14 @@ test.describe('PUT users', () => {
         expectCorrectResponse(response, 200);
         expect(edited).toEqual(expect.objectContaining({
             id: userId,
-            name: expect.any(String),
-            email: userData.email,
+            name: 'Test User to Edit',
+            email: expect.any(String),
             created_at: expect.any(String)
         }));
         expectCorrectUserData(edited);
     });
 
-    test('should return 409 when editing an user email to one already in use by another user', async ({ request }) => {
+    test('should return 409 when editing a user email to one already in use by another user', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
         const response = await usersClient.createUser({ name: 'Test User Using Email', email: usersClient.generateEmail() });
         const user = await response.json();
@@ -212,10 +211,10 @@ test.describe('PUT users', () => {
     const testCases = [
         {"scenario": "should return 400 when trying to edit with no fields", "inputId": null, "data": {}, "statusCode": 400, "expectedBody": {"error": "At least name or email must be provided"}},
         {"scenario": "should return 400 when trying to edit with empty fields", "inputId": null, "data": {"name": "", "email": ""}, "statusCode": 400, "expectedBody": {"error": "At least name or email must be provided"}},
-        {"scenario": "should return 400 when trying to edit an user with an invalid id", "inputId": "invalid-id", "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 when trying to edit an user with a decimal id", "inputId": 1.5, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 when trying to edit an user with a negative id", "inputId": -1, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 when trying to edit an user with id 0", "inputId": 0, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when trying to edit a user with an invalid id", "inputId": "invalid-id", "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when trying to edit a user with a decimal id", "inputId": 1.5, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when trying to edit a user with a negative id", "inputId": -1, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when trying to edit a user with id 0", "inputId": 0, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
         {"scenario": "should return 404 when user is not found with this id", "inputId": NON_EXISTENT_ID, "data": {"name": "Edited User", "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 400 when name is a number", "inputId": null, "data": {"name": 2026, "email": `put_test${Math.random().toString(36).substring(2, 10)}@example.com`}, "statusCode": 400, "expectedBody": {"error": "Name must be a string"}},
         {"scenario": "should return 400 when email is a number", "inputId": null, "data": {"name": "Edited User", "email": 2026}, "statusCode": 400, "expectedBody": {"error": "Email must be a valid email string"}},
@@ -235,28 +234,21 @@ test.describe('PUT users', () => {
     });
 });
 
-test.describe('DELETE users', () => {
-    let userId: number;
-
-    test.beforeAll( async({ request }) => {
-        const usersClient: UsersClient = new UsersClient(request);
-        const response = await usersClient.createUser({ name: 'Test User to Delete', email: usersClient.generateEmail() });
-        expect(response.ok()).toBeTruthy();
-        const user = await response.json();
-        userId = user.id;
-    });
-
+test.describe('delete users', () => {
     test('should delete an existing user', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
-        const response = await usersClient.deleteUser(userId);
-        const user = await response.json();
+        const createRes = await usersClient.createUser({ name: 'Test User to Delete', email: usersClient.generateEmail() });
+        const createdUser = await createRes.json();
+
+        const response = await usersClient.deleteUser(createdUser.id);
+        const deletedUser = await response.json();
 
         expectCorrectResponse(response, 200);
-        expect(user).toEqual(
+        expect(deletedUser).toEqual(
             expect.objectContaining({
                 "message": "User deleted",
                 "user": {
-                    "id": userId,
+                    "id": createdUser.id,
                     "name": expect.any(String),
                     "email": expect.any(String),
                     "created_at": expect.any(String)
@@ -289,7 +281,7 @@ test.describe('DELETE users', () => {
         expect(verifyRes.status()).toBe(404);
     });
 
-    test('should return a 404 when trying to delete an user for the second time', async ({ request }) => {
+    test('should return a 404 when trying to delete a user for the second time', async ({ request }) => {
         const usersClient: UsersClient = new UsersClient(request);
 
         const createRes = await usersClient.createUser({ name: 'Test User To Delete', email: usersClient.generateEmail() });
@@ -318,11 +310,11 @@ test.describe('DELETE users', () => {
     });
 
     const testCases = [
-        {"scenario": "should return 404 when deleting an user with id 0", "inputId": 0, "statusCode": 404, "expectedBody": {"error": "User not found"}},
+        {"scenario": "should return 404 when deleting a user with id 0", "inputId": 0, "statusCode": 404, "expectedBody": {"error": "User not found"}},
         {"scenario": "should return 404 when deleting a non existent user id", "inputId": NON_EXISTENT_ID, "statusCode": 404, "expectedBody": {"error": "User not found"}},
-        {"scenario": "should return 400 when deleting an user with invalid id", "inputId": "invalid-id", "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 when deleting an user with a negative id", "inputId": -1, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
-        {"scenario": "should return 400 when deleting an user with a decimal id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}}
+        {"scenario": "should return 400 when deleting a user with invalid id", "inputId": "invalid-id", "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when deleting a user with a negative id", "inputId": -1, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}},
+        {"scenario": "should return 400 when deleting a user with a decimal id", "inputId": 1.5, "statusCode": 400, "expectedBody": {"error": "Invalid user ID"}}
     ]
 
     testCases.forEach(({ scenario, inputId, statusCode, expectedBody }) => {
