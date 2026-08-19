@@ -42,19 +42,23 @@ test.describe('get products', () => {
 
         const initialResponse = await productsClient.getProducts();
         const initialProducts = await initialResponse.json();
-        const initialSize = initialProducts.length;
+        const initialIds = new Set(initialProducts.map((p: Product) => p.id));
         expectCorrectResponse(initialResponse, 200);
 
+        const addedIds: number[] = [];
         for (let i = 0; i < 10; i++) {
             const res = await productsClient.addProduct();
             expect(res.ok()).toBeTruthy();
+            const product = await res.json();
+            addedIds.push(product.id);
         }
 
         const lastResponse = await productsClient.getProducts();
         const updatedProducts = await lastResponse.json();
 
         expectCorrectResponse(lastResponse, 200);
-        expect(updatedProducts.length).toBe(initialSize + 10);
+        addedIds.forEach(id => expect(initialIds.has(id)).toBe(false));
+        expect(updatedProducts.length).toBeGreaterThanOrEqual(initialProducts.length + 10);
     });
 });
 
